@@ -14,7 +14,7 @@ class AppointmentsController extends Controller
      */
     public function index()
     {
-        //
+        return Appointments::get();
     }
 
     /**
@@ -35,7 +35,7 @@ class AppointmentsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        dd($request->all());
     }
 
     /**

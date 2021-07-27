@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Appointments;
 use App\Models\Departments;
 use App\Models\Schedules;
 use App\Models\Doctors;
@@ -12,9 +13,11 @@ use Carbon\Carbon;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $data['departments']    = Departments::get();
+        // $appointments = Appointments::with('doctor.department', 'schedule')->get();
+        // $request->session()->put('appointments', $appointments);
 
         return view('frontend.index', $data);
     }
@@ -35,9 +38,9 @@ class HomeController extends Controller
         $day    = Carbon::parse($date)->format('l');
         $dayId  = Days::where('day', $day)->first()->id;
 
-        $schedule = Schedules::where('doctor_id', $doctor)->where('day_id', $dayId)->first();
+        $schedule = Schedules::where('doctor_id', $doctor)->where('day_id', $dayId)->get() ?? '';
 
-        if($schedule)
+        if($schedule->toArray())
         {
             $leaveCheck = Leaves::where('doctor_id', $doctor)->where('date', $searchDate)->first();
             if($leaveCheck)
@@ -50,5 +53,46 @@ class HomeController extends Controller
         }
 
         return $day;
+    }
+
+    public function checkAppointment(Request $request)
+    {
+        $scheduleId = $request->scheduleId;
+        $date       = $request->date;
+
+        $schedule = Schedules::find($scheduleId);
+        $maximumPatitent = $schedule->maximum_patient;
+        // $appointments = Appointments::get();
+        $appointments = Appointments::where('schedule_id', $scheduleId)->where('appoint_date', $date)->get();
+
+        $totalAppointment = $appointments->count();
+
+        if($maximumPatitent > $totalAppointment)
+        {
+            return 'available';
+        }else
+        {
+            return $maximumPatitent;
+        }
+    }
+
+    public function setAppointment(Request $request)
+    {
+        $scheduleId = $request->scheduleId;
+        $date       = $request->date;
+
+        $schedule = Schedules::with('doctor')->find($scheduleId);
+        $order_id = Carbon::now()->format('Ymdhis');
+
+        //$appointment = Appointments::create([
+        //     'order_id'      => $order_id,
+        //     'doctor_id'     => $schedule->doctor_id,
+        //     'day_id'        => $schedule->day_id,
+        //     'schedule_id'   => $schedule->id,
+        //     'appoint_date'  => Carbon::parse($date),
+        //     'fee'           => $schedule->doctor->fee,
+        // ]);
+
+        return $appointment;
     }
 }

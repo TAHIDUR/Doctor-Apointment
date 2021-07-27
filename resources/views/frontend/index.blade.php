@@ -3,12 +3,11 @@
 @section('content')
     <div class="row mt-2">
         <div class="col-md-4">
-            <h5>Create Appointment</h5>
+            <h3>Create Appointment</h3>
 
             {{-- Department Select --}}
 
             <form   class="form-horizontal" method="post"
-                    action="{{route('appointment.store')}}"
                     role="form"
                     enctype="multipart/form-data">
             @csrf
@@ -38,14 +37,49 @@
 
                 <div id="schedule-warning"></div>
 
-                <div id="schedule-select" class="form-group mt-2"></div>
+                <div id="schedule-select" class="form-group mt-2">
+                    <label for="exampleFormControlFile1">Select Doctor</label>
+                    <select name="schedule" class="schedule-select form-control form-control-sm">
+                    </select>
+                </div>
+
+                <div id="appointment-message"></div>
 
             </form>
 
         </div>
         
         <div class="col-md-8">
-            <h5>Added Appointment</h5>
+            <h3>Added Appointment</h3>
+
+            @php
+                $appointments = request()->session()->get('appointments');
+            @endphp 
+
+            <table  class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>SL</th>
+                        <th>Department</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Schedule</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="appointments">
+                    @foreach ($appointments as $key => $appointment)
+                        <tr>
+                            <td>{{ ++$key }}</td>
+                            <td>{{ $appointment->doctor->department->name }}</td>
+                            <td>{{ $appointment->doctor->name }}</td>
+                            <td>{{ $appointment->appoint_date }}</td>
+                            <td>{{ $appointment->schedule->start_time .'-'.$appointment->schedule->end_time }}</td>
+                            <td><div onclick="deleteAppointment()" class="btn btn-danger btn-sm">delete</div></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 @endsection
@@ -57,6 +91,7 @@
         $(document).ready(function () {
 
             $('#date-select').css("visibility", "hidden");
+            $('#schedule-select').css("visibility", "hidden");
 
             //Check Doctor Under Selected Deparment
             $('#department-select').on('change',function(){
@@ -138,26 +173,80 @@
                         timeOut();
                     }else
                     {
-                        let scheduleId  = data.id;
-                        let startTime   = data.start_time;
-                        let endTime     = data.end_time;
-                        let maxPatient  = data.maximum_patient;
+                        $('#schedule-select').css("visibility", "");           
+                        let schedule_options = '';
+                        $.each(data, function(key,value){
 
-                        //Doctor Selection 
-                        let scheduleSelect = `
-                        <label for="exampleFormControlFile1">Select Doctor</label>
-                        <select name="schedule" class="schedule-select form-control form-control-sm">
-                                <option value="${scheduleId}">${startTime} to ${endTime}</option>
-                        </select>
-                        `;
+                            schedule_options = `<option value="${value.id}">${value.start_time} to ${value.end_time}</option>`;
+                            $('.schedule-select').append(schedule_options);
+                        });
 
-                        $('#schedule-select').append(scheduleSelect);
+
                     }
                     
                 });
             }
         });
 
+        $('#schedule-select').click(function(){
+            let schedule    = $('.schedule-select').val();
+            let date        = $('#date').val();
+            
+            $.get('/check-appointment', { scheduleId: schedule, date: date})
+                .done (function (data){
+                
+                let check = parseInt(data);
+
+                if(data == 'available')
+                {
+                    $('#appointment-message').empty();
+                    
+                    appointmentMessage = `<div class="text-success alert m-0 p-0">Available</div>
+                    <button onclick="saveAppointment()" class="btn btn-primary btn-sm col-md-12" id="add" type="button">Add This</button>
+                    `
+                    $('#appointment-message').append(appointmentMessage);
+                }
+                else
+                {       
+                    $('#appointment-message').empty();
+
+                    appointmentMessage = `<div class="text-danger alert m-0 p-0">Maximum Quota (${data}) is Filled</div>`
+                    
+                    $('#appointment-message').append(appointmentMessage);
+                }
+            });
+
+        });
+
+        function saveAppointment(){
+            let schedule    = $('.schedule-select').val();
+            let date        = $('#date').val();
+
+            $.get('/set-appointment', {scheduleId:schedule, date:date}, function(response){ 
+                
+                let savedAppointment = `
+                <tr>
+                    <td>{{ ++$key }}</td>
+                    <td>{{ $appointment->doctor->department->name }}</td>
+                    <td>{{ $appointment->doctor->name }}</td>
+                    <td>{{ $appointment->appoint_date }}</td>
+                    <td>{{ $appointment->schedule->start_time .'-'.$appointment->schedule->end_time }}</td>
+                    <td><div onclick="deleteAppointment()" class="btn btn-danger btn-sm">delete</div></td>
+                </tr>
+                `
+                console.log(savedAppointment);
+            });
+        }
+
+        function deleteAppointment(){
+            let schedule    = $('.schedule-select').val();
+            let date        = $('#date').val();
+
+            $.get('/set-appointment', {scheduleId:schedule, date:date}, function(response){ 
+                // console.log(response);
+                let
+            });
+        }
         
     </script>
 @endpush

@@ -20,6 +20,6 @@ class Schedules extends Model
 
     public function doctor()
     {
-        return $this->hasOne(Doctors::class, 'doctor_id', 'id');
+        return $this->belongsTo(Doctors::class, 'doctor_id', 'id');
     }
 }
