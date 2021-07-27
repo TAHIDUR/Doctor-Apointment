@@ -19,5 +19,7 @@ Route::get('/', [HomeController::class, 'index']);
 
 Route::get('/get-doctor', [HomeController::class, 'getDoctor']);
 
+Route::get('/get-schedule', [HomeController::class, 'getSchedule']);
+
 Route::resource('appointment', AppointmentsController::class);
 
