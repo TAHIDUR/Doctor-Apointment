@@ -25,3 +25,5 @@ Route::get('/check-appointment', [HomeController::class, 'checkAppointment']);
 
 Route::get('/set-appointment', [HomeController::class, 'setAppointment']);
 
+Route::get('/delete-appointment', [HomeController::class, 'deleteAppointment']);
+

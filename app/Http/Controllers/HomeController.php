@@ -16,8 +16,14 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $data['departments']    = Departments::get();
-        // $appointments = Appointments::with('doctor.department', 'schedule')->get();
-        // $request->session()->put('appointments', $appointments);
+
+        if ($request->session()->has('users')) {
+            $appointments = request()->session()->get('appointments');
+        }else
+        {
+            $appointments = Appointments::with('doctor.department', 'schedule')->get();
+            $request->session()->put('appointments', $appointments);
+        }
 
         return view('frontend.index', $data);
     }
@@ -84,15 +90,33 @@ class HomeController extends Controller
         $schedule = Schedules::with('doctor')->find($scheduleId);
         $order_id = Carbon::now()->format('Ymdhis');
 
-        //$appointment = Appointments::create([
-        //     'order_id'      => $order_id,
-        //     'doctor_id'     => $schedule->doctor_id,
-        //     'day_id'        => $schedule->day_id,
-        //     'schedule_id'   => $schedule->id,
-        //     'appoint_date'  => Carbon::parse($date),
-        //     'fee'           => $schedule->doctor->fee,
-        // ]);
+        $appointment = Appointments::create([
+            'order_id'      => $order_id,
+            'doctor_id'     => $schedule->doctor_id,
+            'day_id'        => $schedule->day_id,
+            'schedule_id'   => $schedule->id,
+            'appoint_date'  => Carbon::parse($date),
+            'fee'           => $schedule->doctor->fee,
+        ]);
 
-        return $appointment;
+        $appointment = Appointments::with('doctor.department', 'schedule')->find($appointment->id);
+
+        $savedData['sl']            = Appointments::get()->count();
+        $savedData['id']            = $appointment->id;
+        $savedData['department']    = $appointment->doctor->department->name;
+        $savedData['doctor']        = $appointment->doctor->name;
+        $savedData['date']          = $appointment->appoint_date;
+        $savedData['schedule']      = $appointment->schedule->start_time .'-'.$appointment->schedule->end_time;
+
+        return $savedData;
+    }
+
+    public function deleteAppointment(Request $request)
+    {
+        $scheduleId = $request->scheduleId;
+
+        $appointment = Appointments::find($scheduleId);
+
+        $appointment->delete();
     }
 }

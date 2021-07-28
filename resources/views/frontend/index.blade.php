@@ -7,11 +7,6 @@
 
             {{-- Department Select --}}
 
-            <form   class="form-horizontal" method="post"
-                    role="form"
-                    enctype="multipart/form-data">
-            @csrf
-
                 <div class="form-group mb-2">
                     <label for="exampleFormControlFile1">Select Department</label>
                     <select name="departmentId" id="department-select" class="form-control form-control-sm mt-1">
@@ -45,8 +40,6 @@
 
                 <div id="appointment-message"></div>
 
-            </form>
-
         </div>
         
         <div class="col-md-8">
@@ -70,16 +63,28 @@
                 <tbody id="appointments">
                     @foreach ($appointments as $key => $appointment)
                         <tr>
-                            <td>{{ ++$key }}</td>
-                            <td>{{ $appointment->doctor->department->name }}</td>
+                            <td class="item-serial-counter">{{ ++$key }}</td>
+                            <td>
+                                <input type="hidden" id="appointmentId" value="{{ $appointment->id }}">                                
+                                {{ $appointment->doctor->department->name }}
+                            </td>
                             <td>{{ $appointment->doctor->name }}</td>
                             <td>{{ $appointment->appoint_date }}</td>
                             <td>{{ $appointment->schedule->start_time .'-'.$appointment->schedule->end_time }}</td>
-                            <td><div onclick="deleteAppointment()" class="btn btn-danger btn-sm">delete</div></td>
+                            <td><div onclick="deleteAppointment(this)" class="btn btn-danger btn-sm">delete</div></td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
+
+            <form   class="form-horizontal" method="post"
+                    role="form"
+                    enctype="multipart/form-data">
+                    @csrf
+
+                <div id="patient-info"></div>
+
+            </form>
         </div>
     </div>
 @endsection
@@ -223,29 +228,65 @@
             let date        = $('#date').val();
 
             $.get('/set-appointment', {scheduleId:schedule, date:date}, function(response){ 
-                
+
+                let serial      = response.sl;
+                let id          = response.id;
+                let department  = response.department;
+                let date        = response.date;
+                let doctor      = response.doctor;
+                let schedule    = response.schedule;
+                let appointmentData = $('#appointments');
+
                 let savedAppointment = `
                 <tr>
-                    <td>{{ ++$key }}</td>
-                    <td>{{ $appointment->doctor->department->name }}</td>
-                    <td>{{ $appointment->doctor->name }}</td>
-                    <td>{{ $appointment->appoint_date }}</td>
-                    <td>{{ $appointment->schedule->start_time .'-'.$appointment->schedule->end_time }}</td>
-                    <td><div onclick="deleteAppointment()" class="btn btn-danger btn-sm">delete</div></td>
+                    <td>${serial}</td>
+                    <td>
+                        <input type="hidden" id="appointmentId" value="${id}">                                
+                        ${department}
+                    </td>
+                    <td>${doctor}</td>
+                    <td>${date}</td>
+                    <td>${schedule}</td><td><div onclick="deleteAppointment(this)" class="btn btn-danger btn-sm">delete</div></td>
                 </tr>
                 `
-                console.log(savedAppointment);
+                appointmentData.append(savedAppointment);
+
+                $('#doctor-select').empty();
+                $('#date-select').css("visibility", "hidden");
+                $('#schedule-select').css("visibility", "hidden");
+                $('#appointment-message').empty();
+                $('#patient-info').empty();
+
+                let patientInfo = `
+                    <h3>Patient Information</h3>
+                    
+                    <div style="margin-top: 20px;" class="form-group mt-2">
+                        <input id="patientName" name="patientName" type='text' class="form-control" placeholder="Patient Name"/>
+                        <input style="margin-top: 20px;" id="patientNumber" name="patientNumber" type='text' class="form-control" placeholder="Patient Number" />
+                    </div>
+                    <button style="margin-top: 20px;" class="btn btn-primary btn-sm col-md-12" id="add" type="submit">Pay with Paypal</button>
+                `;
+
+                $('#patient-info').append(patientInfo);
             });
         }
 
-        function deleteAppointment(){
-            let schedule    = $('.schedule-select').val();
-            let date        = $('#date').val();
+        function deleteAppointment(obj){
 
-            $.get('/set-appointment', {scheduleId:schedule, date:date}, function(response){ 
-                // console.log(response);
-                let
-            });
+            let deletingRow = $(obj).closest('tr');
+            let appointmentId = deletingRow.find('#appointmentId').val();
+
+            deletingRow.remove();
+
+            setItemSerial();
+
+            $.get('/delete-appointment', {  scheduleId:appointmentId });
+        }
+
+        function setItemSerial() {
+            $('.item-serial-counter').each(function(counter) {
+                $(this).text(counter + 1)
+            })
         }
         
     </script>
