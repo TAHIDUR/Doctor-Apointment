@@ -124,6 +124,8 @@
 
                     }else
                     {
+                        //Show Warning for Doctor 
+
                         $('#doctor-select').empty();
                         $('#date-select').css("visibility", "hidden");
                         let doctorWarning = `<div class="text-danger alert m-0">No Doctor is Found under this department</div>`
@@ -156,7 +158,7 @@
             });
         });
 
-        // console.log();
+        // Schedule Check
         $('#date').click(function(){
             let date        = $('#date').val();
             let doctorId    = $('.doctor-select').val();
@@ -193,6 +195,7 @@
             }
         });
 
+        // Check Appointment
         $('#schedule-select').click(function(){
             let schedule    = $('.schedule-select').val();
             let date        = $('#date').val();
@@ -223,6 +226,7 @@
 
         });
 
+        // Save New Appointment
         function saveAppointment(){
             let schedule    = $('.schedule-select').val();
             let date        = $('#date').val();
@@ -271,6 +275,7 @@
             });
         }
 
+        // Delete appointment
         function deleteAppointment(obj){
 
             let deletingRow = $(obj).closest('tr');
@@ -283,6 +288,7 @@
             $.get('/delete-appointment', {  scheduleId:appointmentId });
         }
 
+        // Set Serial After Deleting
         function setItemSerial() {
             $('.item-serial-counter').each(function(counter) {
                 $(this).text(counter + 1)
